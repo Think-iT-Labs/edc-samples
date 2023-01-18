@@ -73,6 +73,7 @@ include(":transfer:transfer-05-file-transfer-cloud:transfer-file-cloud")
 
 include("transfer:transfer-06-http-data-flow:connector")
 include("transfer:transfer-06-http-data-flow:http-data-flow-integration-tests")
+include("transfer:transfer-06-http-data-flow:http-server")
 
 // modules for code samples ------------------------------------------------------------------------
 include(":other:custom-runtime")
