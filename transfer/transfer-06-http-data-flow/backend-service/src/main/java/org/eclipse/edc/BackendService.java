@@ -20,9 +20,9 @@ import org.eclipse.edc.handler.ReceiverHandler;
 
 import java.util.Optional;
 
-public class EdcHttpServer {
+public class BackendService {
 
-    static final String HTTP_PORT = "edc.http.server.port";
+    static final String HTTP_PORT = "server.port";
 
     public static void main(String[] args) {
         int port = Integer.parseInt(Optional.ofNullable(System.getenv(HTTP_PORT)).orElse("4000"));

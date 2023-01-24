@@ -37,6 +37,8 @@ public class ReceiverHandler implements HttpHandler {
         String query = requestedUri.getRawQuery();
         queryParser.parseQuery(query, parameters);
 
+        System.out.println("Request Body: " + new String(exchange.getRequestBody().readAllBytes()));
+
         // send response
         StringBuilder response = new StringBuilder();
         for (var entry : parameters.entrySet()) {
