@@ -170,6 +170,10 @@ curl -d '{
          }' -H 'content-type: application/json' http://localhost:19193/api/v1/data/assets
 ```
 
+> It is important to note that the `baseUrl` property of the `dataAddress` is a fake data used for
+> the purpose of this example. It will be the data that the consumer will pull on the sample
+> execution.
+
 ### 4. Create a Policy on the provider
 
 In order to manage the accessibility rules of an asset, it is essential to create a policy. However,
@@ -477,3 +481,6 @@ data
 curl --location --request GET 'http://localhost:29291/public/' \
 --header 'Authorization: <auth code>'
 ```
+
+At the end, and to be sure that you correctly achieved the pull, you can check if the data you get
+is the same as the one you at https://jsonplaceholder.typicode.com/users
