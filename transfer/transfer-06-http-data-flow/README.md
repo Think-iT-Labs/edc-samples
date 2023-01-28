@@ -1,31 +1,35 @@
 # Implement a simple Http Data Flow
 
 The purpose of this example is to show a data exchange between 2 connectors, one representing the
-data provider and the other, the consumer. For the sake of simplicity, the provider and the consumer
-will be on the same machine, but in a real world configuration, they may as well be on different
+data provider and the other, the consumer. It's based on a consumer pull usecase that you can find
+more details
+on [Transfer data plane documentation](https://github.com/eclipse-edc/Connector/tree/main/extensions/control-plane/transfer/transfer-data-plane)
+For the sake of simplicity, the provider and the consumer
+will be on the same machine, but in a real world configuration, they will likely be on different
 machines. The final goal of this example is to present the steps through which the 2 connectors will
 have to pass so that the consumer can have access to the data, held by the provider.
 
 Those steps are the following:
 
-* Running the provider connector (Because the provider should be alive)
-* Running the consumer connector (Because it should have a consumer)
-* Running a Http server that will serve the data to the consumer connector
+* Running the provider connector
+* Running the consumer connector
+* Running a Http server that will receive the Endpoint Data Reference on the consumer side, that
+  contains the url to be used to get the data.
 * Register data plane instance for provider connector
 * Register data plane instance for consumer connector
 * Create an Asset on the provider (The asset will be the data to be shared)
 * Create an access policy on the provider (The policy will define the access right to the data)
 * Create a contract definition on the provider
 
-At this steps, the connector shoul be able to fetch the catalog from the provider and to see the
-asset that has been created.
+At this step, the connector should be able to fetch the catalog from the provider and to see the
+contract offer generated from the resources that have been created.
 
 Once the catalog is available, to access the data, the consumer should follow the following steps:
 
 * Performing a contract negotiation with the provider
 * Performing a transfer
     * The consumer will initiate a file transfer
-    * The provider will retrieve an endpoint to access the data
+    * The provider will send an EndpointDataReference to the consumer
 * The consumer could reach the endpoint and access the data
 
 Also, in order to keep things organized, the code in this example has been separated into several
@@ -33,19 +37,22 @@ Java modules:
 
 * `connector`: contains the configuration and build files for both the
   consumer and the provider connector
-* `backend-service`: represent the backend service where the provider will send the endpoint to
-  access the data
+* `backend-service`: represent the backend service where the consumer will send the
+  EndpointDataReference to access the data
+
+> For the sake of simplicity, we will use an in-memory catalog and pre-fill it with just one single
+> asset. This will be deleted after the provider shutdown.
+
+This will be deleted after the provider shutdown.
 
 ### Provider connector
 
-The provider connector is the one performing the file transfer after the file has been requested
-by the consumer.
+The provider connector is the one providing EndpointDataReference to the consumer after it initiates
+a transfer.
 
 ### Consumer connector
 
-The consumer is the one "requesting" the data and providing a destination for it, i.e. a a backend
-service where the provider can send the metadata (endpoint and authorization token) to access the
-service.
+The consumer is the one "requesting" the data to the provider.
 
 # How to build a connector
 
@@ -75,7 +82,7 @@ You can find the configuration file in the directories below:
 To run a provider you should run the following command
 
 ```bash
-java -Dedc.vault=transfer/transfer-06-http-data-flow/provider/provider-vault.properties -Dedc.keystore=transfer/transfer-06-http-data-flow/certs/cert.pfx -Dedc.keystore.password=123456 -Dedc.fs.config=transfer/transfer-06-http-data-flow/provider/provider-configuration.properties -jar transfer/transfer-06-http-data-flow/connector/build/libs/connector.jar
+java -Dedc.vault=transfer/transfer-06-http-data-flow/provider/provider-vault.properties -Dedc.fs.config=transfer/transfer-06-http-data-flow/provider/provider-configuration.properties -jar transfer/transfer-06-http-data-flow/connector/build/libs/connector.jar
 ```
 
 ### 2. Run a consumer
@@ -83,8 +90,7 @@ java -Dedc.vault=transfer/transfer-06-http-data-flow/provider/provider-vault.pro
 To run a consumer you should run the following command
 
 ```bash
-java -Dedc.vault=transfer/transfer-06-http-data-flow/consumer/consumer-vault.properties -Dedc.keystore=transfer/transfer-06-http-data-flow/certs/cert.pfx -Dedc.keystore.password=123456 -Dedc.fs.config=transfer/transfer-06-http-data-flow/consumer/consumer-configuration.properties -jar transfer/transfer-06-http-data-flow/connector/build/libs/connector.jar
-
+java -Dedc.vault=transfer/transfer-06-http-data-flow/consumer/consumer-vault.properties -Dedc.fs.config=transfer/transfer-06-http-data-flow/consumer/consumer-configuration.properties -jar transfer/transfer-06-http-data-flow/connector/build/libs/connector.jar
 ```
 
 Assuming you didn't change the ports in config files, the consumer will listen on the
@@ -144,10 +150,7 @@ curl -H 'Content-Type: application/json' \
 
 The provider connector needs to transfer a file to the location specified by the consumer connector
 when the data are requested. In order to offer any data, the provider must maintain an internal list
-of assets that are available for transfer, the so-called "catalog". For the sake of simplicity, we
-use an in-memory catalog and pre-fill it with just one single asset.
-
-This will be deleted after the provider shutdown.
+of resources offered, through a contract offer, the so-called "catalog".
 
 The following request creates an asset on the provider connector.
 
@@ -177,7 +180,8 @@ curl -d '{
 ### 4. Create a Policy on the provider
 
 In order to manage the accessibility rules of an asset, it is essential to create a policy. However,
-to keep things simple, we will choose a policy that gives direct access to the entire asset catalog.
+to keep things simple, we will choose a policy that gives direct access to all the assets that are
+associated within the contract definitions.
 This means that the consumer connector can request any asset from the provider connector.
 
 ```bash
@@ -203,9 +207,11 @@ curl -d '{
 
 ### 5. Create a contract definition on Provider
 
-To ensure an exchange between suppliers and consumers, the supplier must create a contract offer for
-the good, on the basis of which a contract agreement can be negotiated.
-be negotiated. For this, we use an in-memory store and add a single contract definition that is
+To ensure an exchange between providers and consumers, the supplier must create a contract offer for
+the good, on the basis of which a contract agreement can be negotiated. The contract definition
+associates policies to a selection of assets to generate the contract offers that will be put in the
+catalog. In this case, the selection is empty, so every asset is attached to these policies
+For this, we use an in-memory store and add a single contract definition that is
 valid for the asset.
 
 ```bash
@@ -228,9 +234,9 @@ Sample output:
 
 ### 6. How to fetch catalog on consumer side
 
-In order to offer any data, the provider must maintain an internal list of assets that are available
-for transfer, the so-called "catalog". To get the catalog from the consumer side, you can use the
-following endpoint:
+In order to offer any data, the provider must maintain an internal list of resources offered,
+through a contract offer, the so-called "catalog". To get the
+catalog from the consumer side, you can use the following endpoint:
 
 ```bash
 curl http://localhost:29193/api/v1/data/catalog\?providerUrl\=http://localhost:19194/api/v1/ids/data
@@ -296,9 +302,8 @@ Sample output:
 
 ### 7. Negotiate a contract
 
-In order to request any data, a contract agreement has to be negotiated between providers and
-consumers. The provider offers all of their assets in the form of contract offers, which are the
-basis for such a negotiation.
+In order to request any data, a contract gets negotiated, and an agreement is resulting has to be
+negotiated between providers and consumers.
 
 The consumer now needs to initiate a contract negotiation sequence with the provider. That sequence
 looks as follows:
@@ -313,8 +318,9 @@ looks as follows:
 Of course, this is the simplest possible negotiation sequence. Later on, both connectors can also
 send counter offers in addition to just confirming or declining an offer.
 
-> Please in case you have some issues with the jq option, not that it's not mandatory and you can
-> drop it from the command.
+> Please in case you have some issues with the jq option, not that it's not mandatory, and you can
+> drop it from the command. it's just used to format the output, and the same advice should be
+> applied to all calls that use `jq`.
 
 ```bash
 curl -d '{
@@ -389,21 +395,24 @@ Sample output:
 
 ### 9. Start the transfer
 
-> Please in case you have some issues with the jq option, not that it's not mandatory and you can
+> Please in case you have some issues with the jq option, not that it's not mandatory, and you can
 > drop it from the command.
 
-As a pre-requisite, you need to have a backend service that run on port 4000
+As a pre-requisite, you need to have a backend service that runs on port 4000
 
 ```bash
 ./gradlew transfer:transfer-06-http-data-flow:backend-service:build
 java -jar transfer/transfer-06-http-data-flow/backend-service/build/libs/backend-service.jar 
 ```
 
-Now that we have a contract agreement, we can finally request the file. In the request body we need
+Now that we have a contract agreement, we can finally request the file. In the request body, we need
 to specify which asset we want transferred, the ID of the contract agreement, the address of the
 provider connector and where we want the file transferred. You will find the request body below.
-Before executing the request, insert the contract agreement ID from the previous step and adjust the
-destination location for the file transfer. Then run :
+Before executing the request, insert the contract agreement ID from the previous step. Then run :
+
+> the "HttpProxy" method is used for the consumer pull method, and it means that it will be up to
+> the consumer to request the data to the provider and that the request will be a proxy for the
+> datasource
 
 ```bash
 curl -X POST "http://localhost:29193/api/v1/data/transferprocess" \
@@ -442,20 +451,7 @@ read the UUID.
 curl http://localhost:19193/api/v1/data/transferprocess/<transfer process id>
 ```
 
-You will probably get a response like the following:
-
-```json
-[
-  {
-    "message": "Object of type TransferProcess with ID=517c8e3c-de78-4b4b-a6c9-734a12672ab0 was not found",
-    "type": "ObjectNotFound",
-    "path": null,
-    "invalidValue": null
-  }
-]
-```
-
-### 11. See the data
+### 11. Pull the data
 
 At this step, if you look at the backend service logs, you will have a json representing
 the data useful for reading the data. This is presented in the following section.
