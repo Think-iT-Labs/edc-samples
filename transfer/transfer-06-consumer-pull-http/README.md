@@ -61,7 +61,7 @@ and another one with the configuration of a consumer.
 This section allows you to build the connector before launching it.
 
 ```bash
-./gradlew transfer:transfer-06-http-data-flow:connector:build
+./gradlew transfer:transfer-06-consumer-pull-http:connector:build
 ```
 
 After the build end you should verify that the connector jar is created in the directory
@@ -80,7 +80,7 @@ You can find the configuration file in the directories below:
 To run a provider you should run the following command
 
 ```bash
-java -Dedc.vault=transfer/transfer-06-http-data-flow/provider/provider-vault.properties -Dedc.fs.config=transfer/transfer-06-http-data-flow/provider/provider-configuration.properties -jar transfer/transfer-06-http-data-flow/connector/build/libs/connector.jar
+java -Dedc.vault=transfer/transfer-06-consumer-pull-http/provider/provider-vault.properties -Dedc.fs.config=transfer/transfer-06-consumer-pull-http/provider/provider-configuration.properties -jar transfer/transfer-06-consumer-pull-http/connector/build/libs/connector.jar
 ```
 
 ### 2. Run a consumer
@@ -88,7 +88,7 @@ java -Dedc.vault=transfer/transfer-06-http-data-flow/provider/provider-vault.pro
 To run a consumer you should run the following command
 
 ```bash
-java -Dedc.vault=transfer/transfer-06-http-data-flow/consumer/consumer-vault.properties -Dedc.fs.config=transfer/transfer-06-http-data-flow/consumer/consumer-configuration.properties -jar transfer/transfer-06-http-data-flow/connector/build/libs/connector.jar
+java -Dedc.vault=transfer/transfer-06-consumer-pull-http/consumer/consumer-vault.properties -Dedc.fs.config=transfer/transfer-06-consumer-pull-http/consumer/consumer-configuration.properties -jar transfer/transfer-06-consumer-pull-http/connector/build/libs/connector.jar
 ```
 
 Assuming you didn't change the ports in config files, the consumer will listen on the
@@ -99,6 +99,10 @@ ports `12181`, `19182` (management API) and `19282` (IDS API).
 
 Running this sample consists of multiple steps, that are executed one by one and following the same
 order.
+
+> Please in case you have some issues with the jq option, not that it's not mandatory, and you can
+> drop it from the command. it's just used to format the output, and the same advice should be
+> applied to all calls that use `jq`.
 
 ### 1. Register data plane instance for provider
 
@@ -141,7 +145,8 @@ curl -H 'Content-Type: application/json' \
      "publicApiUrl": "http://localhost:29291/public/"
    }
  }' \
-     -X POST "http://localhost:29195/dataplane/instances"
+     -X POST "http://localhost:29195/dataplane/instances" \
+     -s | jq
 ```
 
 ### 3. Create an Asset on the provider side
@@ -168,7 +173,8 @@ curl -d '{
                "type": "HttpData"
              }
            }
-         }' -H 'content-type: application/json' http://localhost:19193/api/v1/data/assets
+         }' -H 'content-type: application/json' http://localhost:19193/api/v1/data/assets \
+         -s | jq
 ```
 
 > It is important to note that the `baseUrl` property of the `dataAddress` is a fake data used for
@@ -200,7 +206,8 @@ curl -d '{
                "@policytype": "set"
              }
            }
-         }' -H 'content-type: application/json' http://localhost:19193/api/v1/data/policydefinitions
+         }' -H 'content-type: application/json' http://localhost:19193/api/v1/data/policydefinitions \
+         -s | jq
 ```
 
 ### 5. Create a contract definition on Provider
@@ -216,7 +223,8 @@ curl -d '{
            "accessPolicyId": "aPolicy",
            "contractPolicyId": "aPolicy",
            "criteria": []
-         }' -H 'content-type: application/json' http://localhost:19193/api/v1/data/contractdefinitions
+         }' -H 'content-type: application/json' http://localhost:19193/api/v1/data/contractdefinitions \
+         -s | jq
 ```
 
 Sample output:
@@ -315,10 +323,6 @@ looks as follows:
 Of course, this is the simplest possible negotiation sequence. Later on, both connectors can also
 send counter offers in addition to just confirming or declining an offer.
 
-> Please in case you have some issues with the jq option, not that it's not mandatory, and you can
-> drop it from the command. it's just used to format the output, and the same advice should be
-> applied to all calls that use `jq`.
-
 ```bash
 curl -d '{
            "connectorId": "provider",
@@ -389,14 +393,11 @@ Sample output:
 
 ### 9. Start the transfer
 
-> Please in case you have some issues with the jq option, not that it's not mandatory, and you can
-> drop it from the command.
-
 As a pre-requisite, you need to have a backend service that runs on port 4000
 
 ```bash
-./gradlew transfer:transfer-06-http-data-flow:backend-service:build
-java -jar transfer/transfer-06-http-data-flow/backend-service/build/libs/backend-service.jar 
+./gradlew transfer:transfer-06-consumer-pull-http:backend-service:build
+java -jar transfer/transfer-06-consumer-pull-http/backend-service/build/libs/backend-service.jar 
 ```
 
 Now that we have a contract agreement, we can finally request the file. In the request body, we need

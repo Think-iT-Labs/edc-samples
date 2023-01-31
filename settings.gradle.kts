@@ -75,8 +75,8 @@ include(":transfer:transfer-05-file-transfer-cloud:cloud-transfer-consumer")
 include(":transfer:transfer-05-file-transfer-cloud:cloud-transfer-provider")
 include(":transfer:transfer-05-file-transfer-cloud:transfer-file-cloud")
 
-include("transfer:transfer-06-http-data-flow:connector")
-include("transfer:transfer-06-http-data-flow:backend-service")
+include("transfer:transfer-06-consumer-pull-http:connector")
+include("transfer:transfer-06-consumer-pull-http:backend-service")
 
 // modules for code samples ------------------------------------------------------------------------
 include(":other:custom-runtime")

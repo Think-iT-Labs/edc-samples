@@ -45,7 +45,7 @@ a provider that offers a file located in an `Azure Blob Storage`, and a consumer
 transfer this file to an `AWS S3 bucket`. Terraform is used for creating all required cloud
 resources.
 
-### [Transfer sample 06](./transfer-06-http-data-flow/README.md): Perform a consumer pull exchange between a connector and a provider
+### [Transfer sample 06](./transfer-06-consumer-pull-http/README.md): Perform a consumer pull exchange between a connector and a provider
 
 In this sample, we will describe a step-by-step guide to demonstrate a consumer pull exchange
 between two connections. One connecter is a consumer and the other is a provider. The consumer will
