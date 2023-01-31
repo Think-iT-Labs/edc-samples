@@ -1,4 +1,4 @@
-# Implement a simple Http Data Flow
+# Implement a simple "Consumer Pull" Http transfer flow
 
 The purpose of this example is to show a data exchange between 2 connectors, one representing the
 data provider and the other, the consumer. It's based on a consumer pull usecase that you can find
@@ -37,13 +37,11 @@ Java modules:
 
 * `connector`: contains the configuration and build files for both the
   consumer and the provider connector
-* `backend-service`: represent the backend service where the consumer will send the
+* `backend-service`: represent the backend service where the consumer connector will send the
   EndpointDataReference to access the data
 
 > For the sake of simplicity, we will use an in-memory catalog and pre-fill it with just one single
 > asset. This will be deleted after the provider shutdown.
-
-This will be deleted after the provider shutdown.
 
 ### Provider connector
 
@@ -211,8 +209,6 @@ To ensure an exchange between providers and consumers, the supplier must create 
 the good, on the basis of which a contract agreement can be negotiated. The contract definition
 associates policies to a selection of assets to generate the contract offers that will be put in the
 catalog. In this case, the selection is empty, so every asset is attached to these policies
-For this, we use an in-memory store and add a single contract definition that is
-valid for the asset.
 
 ```bash
 curl -d '{
@@ -234,9 +230,10 @@ Sample output:
 
 ### 6. How to fetch catalog on consumer side
 
-In order to offer any data, the provider must maintain an internal list of resources offered,
-through a contract offer, the so-called "catalog". To get the
-catalog from the consumer side, you can use the following endpoint:
+In order to offer any data, the consumer can fetch the catalog from the provider, that will contain
+all the contract offers available for negotiation. In our case, it will contain a single contract
+offer, the so-called "catalog". To get the catalog from the consumer side, you can use the following
+endpoint:
 
 ```bash
 curl http://localhost:29193/api/v1/data/catalog\?providerUrl\=http://localhost:19194/api/v1/ids/data
@@ -368,9 +365,6 @@ state machine. Once both provider and consumer either reach the `confirmed` or t
 state, the negotiation is finished. We can now use the UUID to check the current status of the
 negotiation using an endpoint on the consumer side.
 
-> Please in case you have some issues with the jq option, not that it's not mandatory and you can
-> drop it from the command.
-
 ```bash
 curl -X GET "http://localhost:29193/api/v1/data/contractnegotiations/<contract negotiation id, returned by the negotiation call>" \
     --header 'Content-Type: application/json' \
@@ -479,4 +473,4 @@ curl --location --request GET 'http://localhost:29291/public/' \
 ```
 
 At the end, and to be sure that you correctly achieved the pull, you can check if the data you get
-is the same as the one you at https://jsonplaceholder.typicode.com/users
+is the same as the one you can get at https://jsonplaceholder.typicode.com/users

@@ -16,9 +16,6 @@ plugins {
     id("java")
 }
 
-val edcGroupId = "org.eclipse.edc"
-val edcVersion = "0.0.1-milestone-7"
-
 tasks.withType<Jar> {
     manifest {
         attributes["Main-Class"] = "org.eclipse.edc.EdcHttpServer"
