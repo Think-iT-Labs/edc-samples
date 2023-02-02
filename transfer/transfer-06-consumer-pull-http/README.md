@@ -80,7 +80,7 @@ You can find the configuration file in the directories below:
 To run a provider, you should run the following command
 
 ```bash
-java -Dedc.vault=transfer/transfer-06-consumer-pull-http/provider/provider-vault.properties -Dedc.fs.config=transfer/transfer-06-consumer-pull-http/provider/provider-configuration.properties -jar transfer/transfer-06-consumer-pull-http/connector/build/libs/connector.jar
+java -Dedc.keystore=transfer/transfer-06-consumer-pull-http/certs/cert.pfx -Dedc.keystore.password=123456 -Dedc.vault=transfer/transfer-06-consumer-pull-http/provider/provider-vault.properties -Dedc.fs.config=transfer/transfer-06-consumer-pull-http/provider/provider-configuration.properties -jar transfer/transfer-06-consumer-pull-http/connector/build/libs/connector.jar
 ```
 
 ### 2. Run a consumer
@@ -88,7 +88,7 @@ java -Dedc.vault=transfer/transfer-06-consumer-pull-http/provider/provider-vault
 To run a consumer, you should run the following command
 
 ```bash
-java -Dedc.vault=transfer/transfer-06-consumer-pull-http/consumer/consumer-vault.properties -Dedc.fs.config=transfer/transfer-06-consumer-pull-http/consumer/consumer-configuration.properties -jar transfer/transfer-06-consumer-pull-http/connector/build/libs/connector.jar
+java -Dedc.keystore=transfer/transfer-06-consumer-pull-http/certs/cert.pfx -Dedc.keystore.password=123456 -Dedc.vault=transfer/transfer-06-consumer-pull-http/consumer/consumer-vault.properties -Dedc.fs.config=transfer/transfer-06-consumer-pull-http/consumer/consumer-configuration.properties -jar transfer/transfer-06-consumer-pull-http/connector/build/libs/connector.jar
 ```
 
 Assuming you didn't change the ports in config files, the consumer will listen on the
