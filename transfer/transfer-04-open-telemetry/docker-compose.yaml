@@ -60,7 +60,7 @@ services:
 
   prometheus:
     image: prom/prometheus:v2.30.3
-    container_name: prometheus
+#    container_name: prometheus
     volumes:
       - ./prometheus/:/etc/prometheus/
     ports:
