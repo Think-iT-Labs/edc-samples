@@ -22,16 +22,8 @@ dependencies {
     runtimeOnly(project(":federated-catalog:fc-00-basic:federated-catalog-base"))
     runtimeOnly(project(":federated-catalog:fc-00-basic:fixed-node-resolver"))
 
-    implementation(libs.edc.runtime.core)
-    implementation(libs.edc.connector.core)
-    implementation(libs.edc.control.plane.core)
-    implementation(libs.edc.configuration.filesystem)
-    implementation(libs.edc.management.api)
-    implementation(libs.edc.dsp)
+    implementation(libs.edc.bom.controlplane.base)
     implementation(libs.edc.iam.mock)
-    implementation(libs.edc.http)
-    implementation(libs.edc.edr.store.core)
-
 }
 
 application {
